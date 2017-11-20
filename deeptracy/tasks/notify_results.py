@@ -19,7 +19,10 @@ from celery import task
 from deeptracy_core.dal.database import db
 from deeptracy_core.dal.scan.manager import get_scan
 from deeptracy_core.dal.project.project_hooks import ProjectHookType
+from deeptracy_core.dal.scan_vul.manager import get_scan_vulnerabilities
+
 import deeptracy.notifications.slack_webhook_post as slack
+import deeptracy.notifications.email_send as email
 
 logger = logging.getLogger('deeptracy')
 
@@ -32,8 +35,23 @@ def notify_results(scan_id):
 
         logger.debug('notify project data {}'.format(project.hook_data))
 
-        notif_text = 'project at {} has vulnerabilities'.format(project.repo)
+        vul_list = []
+        if project.hook_type != ProjectHookType.NONE.name:
+            vul_list = get_scan_vulnerabilities(scan_id, session)
+
+        vul_txt = ''
+        for vul in vul_list:
+            vul_txt += '{library} {version} {severity} {summary} {advisory} \n'.format(
+                library=vul.library,
+                version=vul.version,
+                severity=vul.severity,
+                summary=vul.summary,
+                advisory=vul.advisory
+            )
 
         if project.hook_type == ProjectHookType.SLACK.name:
             hook_data_dict = json.loads(project.hook_data)
-            slack.notify(hook_data_dict.get('webhook_url'), notif_text)
+            slack.notify(hook_data_dict.get('webhook_url'), project, vul_txt)
+        elif project.hook_type == ProjectHookType.EMAIL.name:
+            hook_data_dict = json.loads(project.hook_data)
+            email.notify(hook_data_dict.get('email'), project, vul_txt)

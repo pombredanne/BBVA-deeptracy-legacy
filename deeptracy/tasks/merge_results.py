@@ -21,6 +21,7 @@ from deeptracy_core.dal.database import db
 from deeptracy_core.dal.scan.manager import get_scan
 from deeptracy_core.dal.project.project_hooks import ProjectHookType
 from deeptracy_core.dal.scan.manager import ScanState, update_scan_state
+from deeptracy_core.dal.scan_vul.manager import add_scan_vulnerabilities
 
 from ..config import SHARED_VOLUME_PATH
 from .notify_results import notify_results
@@ -30,13 +31,8 @@ logger = logging.getLogger('deeptracy')
 
 @task(name="merge_results")
 def merge_results(results, scan_id=None):
-    for result in results:
-        logger.info('{} merge results'.format(result))
 
-    # with db.session_scope() as session:
-    #     scan = get_scan(scan_id, session)
-
-    # After the merge we remove the folder with the scan source
+    # remove the folder with the scan source
     scan_dir = os.path.join(SHARED_VOLUME_PATH, scan_id)
     try:
         shutil.rmtree(scan_dir)
@@ -50,10 +46,13 @@ def merge_results(results, scan_id=None):
         scan = get_scan(scan_id, session)
         project = scan.project
 
-        scan = update_scan_state(scan, ScanState.DONE, session)
-        session.commit()
+        update_scan_state(scan, ScanState.DONE, session)
+        # session.commit()
+
+        # TODO: perform a real merge
+        add_scan_vulnerabilities(scan_id, results, session)
 
         if project.hook_type != ProjectHookType.NONE.name:
             # launch notify task
-            logger.debug('{} launch notify task for project.hook_type'.format(scan.id))
-            notify_results.delay(scan.id)
+            logger.debug('{} launch notify task for project.hook_type'.format(scan_id))
+            notify_results.delay(scan_id)

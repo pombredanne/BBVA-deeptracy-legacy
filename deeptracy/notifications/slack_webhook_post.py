@@ -7,14 +7,17 @@ import json
 import requests
 import logging
 
+from deeptracy_core.dal.project.model import Project
+
 log = logging.getLogger(__name__)
 
 
-def notify(webhook_url: str, text):
+def notify(webhook_url: str, project: Project, vulnerabilities: str):
 
-    slack_data = {'text': text}
+    notif_text = 'project at {} has vulnerabilities: \n {}'.format(project.repo, vulnerabilities)
+    log.info('notify to SLACK -> {}'.format(notif_text))
 
-    log.info('notify to SLACK -> {}'.format(text))
+    slack_data = {'text': notif_text}
 
     response = requests.post(
         webhook_url,
