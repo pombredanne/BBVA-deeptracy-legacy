@@ -12,10 +12,12 @@ from deeptracy_core.dal.project.model import Project
 
 from ..config import DEEPTRACY_EMAIL, SMTP_HOST
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def notify(email_to: str, project: Project, vulnerabilities: str):
+
+    logger.info('notify to EMAIL -> {}'.format(email_to))
 
     # Create message container - the correct MIME type is multipart/alternative.
     msg = MIMEMultipart('alternative')
