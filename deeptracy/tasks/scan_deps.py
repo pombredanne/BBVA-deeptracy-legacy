@@ -23,7 +23,7 @@ from deeptracy_core.dal.database import db
 from deeptracy_core.dal.scan.manager import get_scan, get_previous_scan_for_project, update_scan_state, ScanState
 from deeptracy_core.dal.scan_dep.manager import add_scan_deps, compare_scan_deps
 
-from .start_scan import start_scan
+from .get_vulnerabilities import get_vulnerabilities
 
 logger = get_task_logger('deeptracy')
 
@@ -59,7 +59,7 @@ def scan_deps(scan_id: str):
                 logger.debug('{} scan has same deps as {}'.format(scan_id, previous_scan.id))
 
     if not deps_equals:
-        start_scan.delay(scan_id)
+        get_vulnerabilities.delay(scan_id)
 
 
 def get_dependencies(lang: str, sources: str):
