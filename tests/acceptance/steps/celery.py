@@ -27,7 +27,7 @@ def step_impl(context, task):
 @when(u'all celery tasks are done')
 def step_impl(context):
     i = context.celery.control.inspect()
-    max_wait = 240
+    max_wait = 10000
     waiting = 0
     while True:
         active = i.active()
@@ -35,8 +35,8 @@ def step_impl(context):
         if waiting > max_wait:
             raise TimeoutError('celery task wait timeout')
         elif active is None:
-            waiting = waiting + 5
-            time.sleep(5)
+            waiting = waiting + 30
+            time.sleep(30)
             continue
 
         still_active = False
@@ -47,7 +47,7 @@ def step_impl(context):
         if still_active is False:
             return
         elif waiting < max_wait:
-            waiting = waiting + 5
-            time.sleep(5)
+            waiting = waiting + 30
+            time.sleep(30)
         else:
             raise TimeoutError('celery task wait timeout')

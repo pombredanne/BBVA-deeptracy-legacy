@@ -38,10 +38,10 @@ def step_impl(context, state):
     assert results[0]['state'] == state
 
 
-@then(u'the results for the analysis in the database exists')
+@then(u'the vulnerabilities for the scan in the database exists')
 def step_impl(context):
-    sql = text('SELECT * FROM scan_analysis_vulnerability WHERE scan_analysis_id = :scan_analysis_id')
-    results = context.engine.execute(sql, scan_analysis_id=context.scan_analysis_id).fetchall()
+    sql = text('SELECT * FROM scan_vulnerability WHERE scan_id = :scan_id')
+    results = context.engine.execute(sql, scan_id=context.scan_id).fetchall()
 
     assert len(results) > 0  # this scan has at least 1 vuln
 

@@ -26,13 +26,13 @@ def step_impl(context):
     db.init_engine(db_uri=os.environ['DATABASE_URI'])
     clean_directory(context.SHARED_VOLUME_PATH)
 
+    sql = text('DELETE FROM vulnerability')
+    context.engine.execute(sql)
+
+    sql = text('DELETE FROM scan_vulnerability')
+    context.engine.execute(sql)
+
     sql = text('DELETE FROM scan_deps')
-    context.engine.execute(sql)
-
-    sql = text('DELETE FROM scan_analysis_vulnerability')
-    context.engine.execute(sql)
-
-    sql = text('DELETE FROM scan_analysis')
     context.engine.execute(sql)
 
     sql = text('DELETE FROM scan')
