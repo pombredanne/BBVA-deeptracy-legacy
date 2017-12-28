@@ -7,11 +7,32 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
     ports:
-      - 5433:5433
-    command: -p 5433
+      - 5432:5432
 
-  rabbit:
-    image: rabbitmq:3-management
+  redis:
+    image: redis:3-alpine
     ports:
-      - 5672:5672
-      - 15672:15672
+      - 6379:6379
+
+  patton:
+    image: bbvalabs/patton:latest
+    ports:
+      - 8000:80
+    environment:
+      - "PATTON_DB_URL=postgres+psycopg2://postgres:postgres@postgres:5432/patton"
+      - PATTON_HTTP_PORT=80
+      - PATTON_DOWNLOAD_FOLDER=/tmp/patton
+      - PATTON_HTTP_DEBUG=True
+    depends_on:
+      - postgres
+
+  patton-init:
+    image: bbvalabs/patton:latest
+    environment:
+      - "PATTON_DB_URL=postgres+psycopg2://postgres:postgres@postgres:5432/patton"
+      - PATTON_HTTP_PORT=80
+      - PATTON_DOWNLOAD_FOLDER=/tmp/patton
+      - PATTON_HTTP_DEBUG=True
+    depends_on:
+      - patton
+    command: bash -c "bash ./load_assets.sh ; python main.py -r"

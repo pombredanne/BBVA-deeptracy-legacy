@@ -14,14 +14,13 @@
 import os
 import shutil
 import requests
-from json import JSONDecodeError
 
-from celery import task, current_app
+from celery import task
 from celery.utils.log import get_task_logger
 
 from deeptracy_core.dal.project.project_hooks import ProjectHookType
 from deeptracy_core.dal.database import db
-from deeptracy_core.dal.scan.manager import get_scan, ScanState
+from deeptracy_core.dal.scan.manager import get_scan, update_scan_state, ScanState
 from deeptracy_core.dal.scan_dep.manager import get_scan_deps
 from deeptracy_core.dal.scan_vul.manager import add_scan_vul
 
@@ -39,12 +38,21 @@ def get_vulnerabilities(scan_id: str):
         scan_deps = []
 
         def format(raw_dep):
-            [package_part, full_version_part] = raw_dep.split('@')
-            name_package = package_part.split(':')[1]
-            version_part = full_version_part.split(':')[0]
-            scan_deps.append([name_package, version_part])
 
-        [format(scan.raw_dep) for scan in get_scan_deps(scan_id, session)]
+            parts = raw_dep.split(':')
+            if len(parts) == 3:
+                library_parts = parts[1].split('@')
+
+                if len(library_parts) > 2:
+                    name_package = '@'.join(library_parts[:-1])
+                else:
+                    name_package = library_parts[0]
+
+                version_part = library_parts[-1]
+                scan_deps.append([name_package, version_part])
+
+        scans_deps_aux = get_scan_deps(scan_id, session)
+        [format(scan.raw_dep) for scan in scans_deps_aux]
         scan_deps_len = len(scan_deps)
 
         scan = get_scan(scan_id, session)
@@ -54,23 +62,25 @@ def get_vulnerabilities(scan_id: str):
 
         def get_response(i, scan_dep):
             [package, version] = scan_dep
-            url = 'http://localhost:8000/{package}/{version}'.format(package=package, version=version)
+            url = 'http://localhost:8000/batch'
 
-            response = requests.get(url).json()
+            response = requests.post(url, json=[scan_dep]).json()
             logger.info("Procesado {} de {}".format(i, scan_deps_len))
 
             if response:
-                total_vulnerabilities.append([package, version])
-                # save all dependencies in the database
-                add_scan_vul(scan.id, package, version, response, session)
-                session.commit()
-                logger.debug('saved {vulnerabilities} vulnerabilities for package {package}:{version}'.format(
-                    vulnerabilities=len(response), package=package, version=version))
+                for key in response:
+                    if response[key]:
+                        total_vulnerabilities.append([package, version])
+                        # save all dependencies in the database
+                        add_scan_vul(scan.id, package, version, response[key], session)
+                        session.commit()
+                        logger.debug('saved {vulnerabilities} vulnerabilities for package {package}:{version}'.format(
+                            vulnerabilities=len(response), package=package, version=version))
+
         [get_response(i, scan_dep) for i, scan_dep in enumerate(scan_deps)]
 
         scan.total_vulnerabilities = len(total_vulnerabilities)
-        scan.state = ScanState.DONE
-        session.add(scan)
+        update_scan_state(scan, ScanState.DONE, session)
         session.commit()
 
         # After the merge we remove the folder with the scan source
@@ -82,10 +92,8 @@ def get_vulnerabilities(scan_id: str):
                 scan_dir,
                 e
             ))
-
         if project.hook_type != ProjectHookType.NONE.name:
             # launch notify task
             logger.debug('{} launch notify task for project.hook_type'.format(scan.id))
 
             notify_results.delay(scan.id)
-

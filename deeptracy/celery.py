@@ -20,7 +20,7 @@ db.init_engine()  # Init database engine
 # SETUP AND CREATE CELERY APP
 celery = Celery('deeptracy',
                 broker=BROKER_URI,
-                backend=BROKER_URI,
+                backend="",
                 include=[
                     'deeptracy.tasks.prepare_scan',
                     'deeptracy.tasks.scan_deps',
