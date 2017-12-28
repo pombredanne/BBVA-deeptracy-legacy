@@ -18,15 +18,15 @@ services:
       - /tmp:/tmp
       - ./private_key:/root/.ssh/
     privileged: true
-    command: ["./wait-for-it.sh", "postgres:5433", "--", "/opt/deeptracy/run.sh"]
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "/opt/deeptracy/run.sh"]
 
   postgres:
     image: postgres:9.6-alpine
     ports:
-      - 5433:5433
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
-    command: -p 5433
+    command: -p 5432
 
   redis:
     image: redis:3-alpine
