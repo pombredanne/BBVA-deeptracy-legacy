@@ -24,7 +24,7 @@ from deeptracy_core.dal.scan.manager import get_scan, update_scan_state, ScanSta
 from deeptracy_core.dal.scan_dep.manager import get_scan_deps
 from deeptracy_core.dal.scan_vul.manager import add_scan_vul
 
-from ..config import SHARED_VOLUME_PATH
+from ..config import SHARED_VOLUME_PATH, PATTON_URI
 from .notify_results import notify_results
 
 logger = get_task_logger('deeptracy')
@@ -36,6 +36,25 @@ def get_vulnerabilities(scan_id: str):
         logger.debug('{} extract dependencies'.format(scan_id))
 
         scan_deps = []
+
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+        logger.info(PATTON_URI)
+
 
         def format(raw_dep):
 
@@ -62,7 +81,7 @@ def get_vulnerabilities(scan_id: str):
 
         def get_response(i, scan_dep):
             [package, version] = scan_dep
-            url = 'http://localhost:8000/batch'
+            url = '{}/batch'.format(PATTON_URI)
 
             response = requests.post(url, json=[scan_dep]).json()
             logger.info("Procesado {} de {}".format(i, scan_deps_len))

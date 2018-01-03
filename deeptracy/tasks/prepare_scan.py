@@ -37,7 +37,23 @@ def prepare_scan(scan_id: str):
         logger.info('{} START SCAN'.format(scan_id))
         scan = get_scan(scan_id, session)
         project = scan.project
-
+        print("IMPRIMIMOS")
+        print("IMPRIMIMOS")
+        print("IMPRIMIMOS")
+        print("IMPRIMIMOS")
+        print("IMPRIMIMOS")
+        print("IMPRIMIMOS")
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
+        print(config.PATTON_URI)
         logger.debug('{} for project({})'.format(scan_id, project.id))
 
         try:
