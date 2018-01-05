@@ -37,25 +37,6 @@ def get_vulnerabilities(scan_id: str):
 
         scan_deps = []
 
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-        logger.info(PATTON_URI)
-
-
         def format(raw_dep):
 
             parts = raw_dep.split(':')
