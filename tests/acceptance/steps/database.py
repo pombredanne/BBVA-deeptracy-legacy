@@ -32,7 +32,7 @@ def step_impl(context, state):
 def step_impl(context):
     sql = text('SELECT * FROM scan_vulnerability WHERE scan_id = :scan_id')
     results = context.engine.execute(sql, scan_id=context.scan_id).fetchall()
-
+    print('RESULTADOS: {}'.format(len(results)))
     assert len(results) > 0  # this scan has at least 1 vuln
 
 

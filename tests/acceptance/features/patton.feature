@@ -7,7 +7,7 @@ Feature: Patton
     And a project with "https://github.com/Sergiodfdez/test_deeptracy.git" repo exists in the database
     And a scan for lang "nodejs" in "develop" branch exists for the project
 
-  Scenario: The plugin generates valid output
+  Scenario: Patton generates valid output
     When a task for "prepare_scan" is added to celery for the scan
     And all celery tasks are done
     Then the scan folder is deleted

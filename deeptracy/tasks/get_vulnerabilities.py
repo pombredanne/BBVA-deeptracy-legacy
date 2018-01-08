@@ -65,6 +65,7 @@ def get_vulnerabilities(scan_id: str):
             url = '{}/batch'.format(PATTON_URI)
 
             response = requests.post(url, json=[scan_dep]).json()
+            print(response)
             logger.info("Procesado {} de {}".format(i, scan_deps_len))
 
             if response:
@@ -74,7 +75,7 @@ def get_vulnerabilities(scan_id: str):
                         # save all dependencies in the database
                         add_scan_vul(scan.id, package, version, response[key], session)
                         session.commit()
-                        logger.debug('saved {vulnerabilities} vulnerabilities for package {package}:{version}'.format(
+                        logger.info('saved {vulnerabilities} vulnerabilities for package {package}:{version}'.format(
                             vulnerabilities=len(response), package=package, version=version))
 
         [get_response(i, scan_dep) for i, scan_dep in enumerate(scan_deps)]
