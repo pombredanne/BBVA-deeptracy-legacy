@@ -77,6 +77,7 @@ def prepare_scan(scan_id: str):
                 session.add(scan)
 
     # once the scan is ready continue with the dependency extraction
+
     scan_deps.delay(scan_id)
 
 

@@ -80,6 +80,7 @@ at: ## run acceptance tests in complete docker environment
 	docker-compose -f tests/acceptance/docker-compose.yml rm -f
 	docker-compose -f tests/acceptance/docker-compose.yml up -d --build
 	sleep 10
+	./wait_for_patton_init.sh
 	behave --no-capture --no-capture-stderr tests/acceptance/features
 	docker-compose -f tests/acceptance/docker-compose.yml kill
 	docker-compose -f tests/acceptance/docker-compose.yml rm -f

@@ -19,16 +19,6 @@ from sqlalchemy import text
 from behave import then, given
 
 
-@then(u'the scan analysis_done is equals analysis_count')
-def step_impl(context):
-    sql = text('SELECT * FROM scan WHERE id = :scan_id')
-    results = context.engine.execute(sql, scan_id=context.scan_id).fetchall()
-
-    assert len(results) == 1  # this scan has 1 fetch
-    assert results[0]['analysis_done'] == results[0]['analysis_count']
-    assert results[0]['analysis_done'] > 0
-
-
 @then(u'the scan state is {state}')
 def step_impl(context, state):
     sql = text('SELECT * FROM scan WHERE id = :scan_id')
@@ -38,11 +28,11 @@ def step_impl(context, state):
     assert results[0]['state'] == state
 
 
-@then(u'the results for the analysis in the database exists')
+@then(u'the vulnerabilities for the scan in the database exists')
 def step_impl(context):
-    sql = text('SELECT * FROM scan_analysis_vulnerability WHERE scan_analysis_id = :scan_analysis_id')
-    results = context.engine.execute(sql, scan_analysis_id=context.scan_analysis_id).fetchall()
-
+    sql = text('SELECT * FROM scan_vulnerability WHERE scan_id = :scan_id')
+    results = context.engine.execute(sql, scan_id=context.scan_id).fetchall()
+    print('RESULTADOS: {}'.format(len(results)))
     assert len(results) > 0  # this scan has at least 1 vuln
 
 
@@ -68,23 +58,13 @@ def step_impl(context, repo):
     context.project_id = project_id
 
 
-@given(u'a scan for lang "{lang}" exists for the project')
-def step_impl(context, lang):
+@given(u'a scan for lang "{lang}" in "{branch}" branch exists for the project')
+def step_impl(context, lang, branch):
     scan_id = '123'
     sql = text('INSERT INTO scan (id, project_id, lang, branch, created) '
                'VALUES (:id, :project_id, :lang, :branch, :created)')
-    context.engine.execute(sql, id=scan_id, project_id=context.project_id, lang=lang, branch='master', created=datetime.now())
+    context.engine.execute(sql, id=scan_id, project_id=context.project_id, lang=lang, branch=branch, created=datetime.now())
     context.scan_id = scan_id
-
-
-@then(u'{created} scan analysis is generated in the database')
-def step_impl(context, created):
-    sql = text('SELECT * FROM scan_analysis')
-    results = context.engine.execute(sql).fetchall()
-
-    assert len(results) == int(created)
-    analysis = results[0]
-    context.scan_analysis_id = analysis[0]  # id
 
 
 @then(u'the results for the scan in the database exists')
