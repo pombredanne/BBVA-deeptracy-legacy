@@ -16,7 +16,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
-      - /Users/sergio.fernandez/PycharmProjects/deeptracy/tests/acceptance/private_key/local_id_rsa:/root/.ssh/id_rsa
+      - ./private_key:/root/.ssh/
     privileged: true
     command: ["./wait-for-it.sh", "postgres:5432", "--", "/opt/deeptracy/run.sh"]
 
