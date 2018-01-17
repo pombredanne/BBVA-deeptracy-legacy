@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import re
+from os import listdir
+from os.path import join
 
 from datetime import datetime
 
@@ -78,6 +81,9 @@ def get_dependencies(lang: str, sources: str):
     if lang == 'nodejs':
         return get_dependencies_for_nodejs(sources, mounted_vol, docker_volumes)
 
+    if lang == 'java':
+        return get_dependencies_for_java(sources, mounted_vol, docker_volumes)
+
 
 def get_dependencies_for_nodejs(sources: str, mounted_vol: str, docker_volumes: dict):
     image = 'node:latest'
@@ -87,9 +93,7 @@ def get_dependencies_for_nodejs(sources: str, mounted_vol: str, docker_volumes: 
                       'cd {mounted_vol} \n' \
                       'npm install --ignore-scripts \n' \
                       'npm ls --parseable --long' \
-        .format(
-            mounted_vol=mounted_vol
-        )
+        .format(mounted_vol=mounted_vol)
 
     # create the script that makes the clone
     script = os.path.join(sources, 'get_deps.sh')
@@ -119,6 +123,74 @@ def get_dependencies_for_nodejs(sources: str, mounted_vol: str, docker_volumes: 
             # TODO: deps has paths and need to be parsed carefully
             dep_split = line.split('node_modules/', 1)
             # parsed_dep_list.append(dep_split[-1])
-            dep_list.append(dep_split[1])
+            parts = dep_split[1].split(':')
+            if len(parts) == 3:
+                library_parts = parts[1].split('@')
 
+                if len(library_parts) > 2:
+                    name_package = '@'.join(library_parts[:-1])
+                else:
+                    name_package = library_parts[0]
+
+                version_part = library_parts[-1]
+                dep_list.append('{}:{}'.format(name_package, version_part))
+
+    return dep_list
+
+
+def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: dict):
+    image = 'maven-gradle:0.0.1'
+    script_contents = ('#!/bin/bash \n'
+                       'mkdir /tmp/deeptracy \n'
+                       'cp -R {mounted_vol} /tmp/deeptracy \n'
+                       'cd {mounted_vol} \n'
+                       'COUNT_GRADLE=$(find -name gradle | wc -l) \n'
+                       'if [ $COUNT_GRADLE -gt 0 ] ; then \n'
+                       ' gradle dependencies  --configuration compile > gradle.txt \n'
+                       'else \n'
+                       ' mvn dependency:tree -DoutputFile=maven.txt \n'
+                       'fi \n').format(
+        mounted_vol=mounted_vol
+    )
+
+    # create the script that makes the clone
+    script = os.path.join(sources, 'get_deps.sh')
+    with open(script, "w") as f:
+        f.write(script_contents)
+
+    os.system('chmod +x {}'.format(script))
+    command = os.path.join(mounted_vol, 'get_deps.sh')  # execute script IGNORING errors
+
+    logger.debug('extract deps with command {}'.format(command))
+
+    docker_client = docker.from_env()
+
+    docker_client.containers.run(
+        image=image,
+        command=command,
+        remove=True,
+        volumes=docker_volumes,
+        detach=False
+    )
+
+    dep_list = []
+    if "gradle.txt" in listdir(sources):
+        file = open(join(sources, "gradle.txt"), 'r')
+        for line in file.readlines():
+            if '\--- ' in line or '+--- ' in line:
+                if '\--- ' in line:
+                    pattern = re.compile(r'[A-Z]*\--- ')
+                if '+--- ' in line:
+                    pattern = re.compile(r'[A-Z]*\+--- ')
+                [package, name_package, version_part] = pattern.split(line)[1].replace("\n", "").split(":")
+                dep_list.append('{}:{}'.format(name_package, version_part))
+
+    if "maven.txt" in listdir(sources):
+        file = open(join(sources, "maven.txt"), 'r')
+        for line in file.readlines():
+            if '+- ' in line or '\- ' in line:
+                pattern = re.compile(r'[+-\\ \|]* ([\w:.-]*)')
+                [package, name_package, type, version_part, extra] = pattern \
+                    .split(line)[1].replace("\n", "").split(":")
+                dep_list.append('{}:{}'.format(name_package, version_part))
     return dep_list
