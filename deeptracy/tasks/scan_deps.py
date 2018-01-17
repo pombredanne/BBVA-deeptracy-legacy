@@ -14,7 +14,7 @@
 import os
 import re
 from os import listdir
-from os.path import isfile, join
+from os.path import join
 
 from datetime import datetime
 
@@ -93,9 +93,7 @@ def get_dependencies_for_nodejs(sources: str, mounted_vol: str, docker_volumes: 
                       'cd {mounted_vol} \n' \
                       'npm install --ignore-scripts \n' \
                       'npm ls --parseable --long' \
-        .format(
-        mounted_vol=mounted_vol
-    )
+        .format(mounted_vol=mounted_vol)
 
     # create the script that makes the clone
     script = os.path.join(sources, 'get_deps.sh')
@@ -167,7 +165,7 @@ def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: di
 
     docker_client = docker.from_env()
 
-    container = docker_client.containers.run(
+    docker_client.containers.run(
         image=image,
         command=command,
         remove=True,
@@ -176,8 +174,6 @@ def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: di
     )
 
     dep_list = []
-    dependencies = ""
-    cosas=listdir(sources)
     if "gradle.txt" in listdir(sources):
         file = open(join(sources, "gradle.txt"), 'r')
         for line in file.readlines():
@@ -194,6 +190,7 @@ def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: di
         for line in file.readlines():
             if '+- ' in line or '\- ' in line:
                 pattern = re.compile(r'[+-\\ \|]* ([\w:.-]*)')
-                [package, name_package, type, version_part, extra] = pattern.split(line)[1].replace("\n", "").split(":")
+                [package, name_package, type, version_part, extra] = pattern \
+                    .split(line)[1].replace("\n", "").split(":")
                 dep_list.append('{}:{}'.format(name_package, version_part))
     return dep_list
