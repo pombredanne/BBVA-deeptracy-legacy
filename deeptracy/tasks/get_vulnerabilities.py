@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import re
 import shutil
 import requests
 
@@ -35,24 +36,7 @@ def get_vulnerabilities(scan_id: str):
     with db.session_scope() as session:
         logger.debug('{} extract dependencies'.format(scan_id))
 
-        scan_deps = []
-
-        def format(raw_dep):
-
-            parts = raw_dep.split(':')
-            if len(parts) == 3:
-                library_parts = parts[1].split('@')
-
-                if len(library_parts) > 2:
-                    name_package = '@'.join(library_parts[:-1])
-                else:
-                    name_package = library_parts[0]
-
-                version_part = library_parts[-1]
-                scan_deps.append([name_package, version_part])
-
-        scans_deps_aux = get_scan_deps(scan_id, session)
-        [format(scan.raw_dep) for scan in scans_deps_aux]
+        scan_deps = get_scan_deps(scan_id, session)
         scan_deps_len = len(scan_deps)
 
         scan = get_scan(scan_id, session)
@@ -61,10 +45,10 @@ def get_vulnerabilities(scan_id: str):
         total_vulnerabilities = []
 
         def get_response(i, scan_dep):
-            [package, version] = scan_dep
+            [package, version] = scan_dep.raw_dep.split(':')
             url = '{}/batch'.format(PATTON_URI)
 
-            response = requests.post(url, json=[scan_dep]).json()
+            response = requests.post(url, json=[[package, version]]).json()
             print(response)
             logger.info("Procesado {} de {}".format(i, scan_deps_len))
 
