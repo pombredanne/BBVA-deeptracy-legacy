@@ -198,6 +198,7 @@ def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: di
                 dep_list.append('{}:{}'.format(name_package, version_part))
     return dep_list
 
+
 def get_dependencies_for_python(sources: str, mounted_vol: str, docker_volumes: dict):
     image = 'python:latest'
     script_contents = ('#!/bin/bash \n'
