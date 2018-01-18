@@ -84,6 +84,9 @@ def get_dependencies(lang: str, sources: str):
     if lang == 'java':
         return get_dependencies_for_java(sources, mounted_vol, docker_volumes)
 
+    if lang == 'python':
+        return get_dependencies_for_python(sources, mounted_vol, docker_volumes)
+
 
 def get_dependencies_for_nodejs(sources: str, mounted_vol: str, docker_volumes: dict):
     image = 'node:latest'
@@ -139,7 +142,7 @@ def get_dependencies_for_nodejs(sources: str, mounted_vol: str, docker_volumes: 
 
 
 def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: dict):
-    image = 'maven-gradle:0.0.1'
+    image = 'bbvalabs/deeptracy-maven-gradle'
     script_contents = ('#!/bin/bash \n'
                        'mkdir /tmp/deeptracy \n'
                        'cp -R {mounted_vol} /tmp/deeptracy \n'
@@ -193,4 +196,46 @@ def get_dependencies_for_java(sources: str, mounted_vol: str, docker_volumes: di
                 [package, name_package, type, version_part, extra] = pattern \
                     .split(line)[1].replace("\n", "").split(":")
                 dep_list.append('{}:{}'.format(name_package, version_part))
+    return dep_list
+
+def get_dependencies_for_python(sources: str, mounted_vol: str, docker_volumes: dict):
+    image = 'python:latest'
+    script_contents = ('#!/bin/bash \n'
+                       'mkdir /tmp/deeptracy \n'
+                       'cp -R {mounted_vol} /tmp/deeptracy \n'
+                       'cd {mounted_vol} \n'
+                       'pip install -r requirements.txt \n'
+                       'pip list >> python.txt \n').format(
+        mounted_vol=mounted_vol
+    )
+
+    # create the script that makes the clone
+    script = os.path.join(sources, 'get_deps.sh')
+    with open(script, "w") as f:
+        f.write(script_contents)
+
+    os.system('chmod +x {}'.format(script))
+    command = os.path.join(mounted_vol, 'get_deps.sh')  # execute script IGNORING errors
+
+    logger.debug('extract deps with command {}'.format(command))
+
+    docker_client = docker.from_env()
+
+    docker_client.containers.run(
+        image=image,
+        command=command,
+        remove=True,
+        volumes=docker_volumes,
+        detach=False
+    )
+
+    dep_list = []
+    if "python.txt" in listdir(sources):
+        file = open(join(sources, "python.txt"), 'r')
+        for line in file.readlines():
+            parts = line.split(" ")
+            name_package = parts[0]
+            pattern = re.compile(r'([0-9.]+)')
+            version_part = pattern.split(parts[1])[1]
+            dep_list.append('{}:{}'.format(name_package, version_part))
     return dep_list
