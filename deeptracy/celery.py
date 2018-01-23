@@ -25,5 +25,6 @@ celery = Celery('deeptracy',
                     'deeptracy.tasks.prepare_scan',
                     'deeptracy.tasks.scan_deps',
                     'deeptracy.tasks.get_vulnerabilities',
-                    'deeptracy.tasks.notify_results'
+                    'deeptracy.tasks.notify_results',
+                    'deeptracy.tasks.notify_patton_deltas'
                 ])

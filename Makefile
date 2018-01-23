@@ -56,7 +56,7 @@ lint: ## check style with flake8
 
 .PHONY: coverage
 coverage: ## check code coverage
-	py.test --cov=deeptracy tests --cov-fail-under 10
+	py.test --cov=deeptracy tests --cov-fail-under 5
 
 .PHONY: docs
 docs: ## generate and shows documentation
