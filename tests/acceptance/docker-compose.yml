@@ -12,7 +12,7 @@ services:
       - DATABASE_URI=postgresql://postgres:postgres@postgres:5433/deeptracy
       - SHARED_VOLUME_PATH=/tmp/deeptracy
       - LOCAL_PRIVATE_KEY_FILE=/root/.ssh/id_rsa
-      - PLUGINS_LOCATION=/opt/deeptracy/plugins
+      - PATTON_URI=http://patton:80
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
@@ -32,3 +32,26 @@ services:
     image: redis:3-alpine
     ports:
       - 6379:6379
+
+  patton:
+    image: bbvalabs/patton:latest
+    ports:
+      - 8000:80
+    environment:
+      - "PATTON_DB_URL=postgres+psycopg2://postgres:postgres@postgres:5433/patton"
+      - PATTON_HTTP_PORT=80
+      - PATTON_DOWNLOAD_FOLDER=/tmp/patton
+      - PATTON_HTTP_DEBUG=True
+    depends_on:
+      - postgres
+
+  patton-init:
+    image: bbvalabs/patton:latest
+    environment:
+      - "PATTON_DB_URL=postgres+psycopg2://postgres:postgres@postgres:5433/patton"
+      - PATTON_HTTP_PORT=80
+      - PATTON_DOWNLOAD_FOLDER=/tmp/patton
+      - PATTON_HTTP_DEBUG=True
+    depends_on:
+      - patton
+    command: bash -c "bash ./load_assets.sh ; python main.py -r"

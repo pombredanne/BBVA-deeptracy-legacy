@@ -56,7 +56,7 @@ Environment Variables
 This are the environment variables needed by the workers
 
 * **BROKER_URI** Url to the redis broker (Ex. redis://127.0.0.1:6379)
-* **DATABASE_URI** Url to the prostgres database (Ex. postgresql://postgres:postgres@127.0.0.1:5432/deeptracy)
+* **DATABASE_URI** Url to the prostgres database (Ex. postgresql://postgres:postgres@127.0.0.1:5433/deeptracy)
 * **SHARED_VOLUME_PATH** Path in the host to mount as a volume in Docker images. this folder
     is going to be used to clone projects to be scanned. (Ex. /tmp/deeptracy)
 * **LOCAL_PRIVATE_KEY_FILE** If you wanna clone private repositories, you can specify a private key file to
@@ -76,7 +76,7 @@ Docker Compose Example
           - postgres
         environment:
           - BROKER_URI=redis://redis:6379
-          - DATABASE_URI=postgresql://postgres:postgres@postgres:5432/deeptracy
+          - DATABASE_URI=postgresql://postgres:postgres@postgres:5433/deeptracy
           - SHARED_VOLUME_PATH=/tmp/deeptracy
           - LOCAL_PRIVATE_KEY_FILE=/tmp/id_rsa
           - PLUGINS_LOCATION=/opt/deeptracy/plugins
@@ -84,7 +84,7 @@ Docker Compose Example
           - /var/run/docker.sock:/var/run/docker.sock
           - /tmp:/tmp
         privileged: true
-        command: ["./wait-for-it.sh", "postgres:5432", "--", "/opt/deeptracy/run.sh"]
+        command: ["./wait-for-it.sh", "postgres:5433", "--", "/opt/deeptracy/run.sh"]
 
 .. _api-ref:
 
@@ -122,7 +122,7 @@ This is an example of a complete Docker Compose file that launch a complete work
           - postgres
         environment:
           - BROKER_URI=redis://redis:6379
-          - DATABASE_URI=postgresql://postgres:postgres@postgres:5432/deeptracy
+          - DATABASE_URI=postgresql://postgres:postgres@postgres:5433/deeptracy
           - SHARED_VOLUME_PATH=/tmp/deeptracy
           - LOCAL_PRIVATE_KEY_FILE=/tmp/id_rsa
           - PLUGINS_LOCATION=/opt/deeptracy/plugins
@@ -130,7 +130,7 @@ This is an example of a complete Docker Compose file that launch a complete work
           - /var/run/docker.sock:/var/run/docker.sock
           - /tmp:/tmp
         privileged: true
-        command: ["./wait-for-it.sh", "postgres:5432", "--", "/opt/deeptracy/run.sh"]
+        command: ["./wait-for-it.sh", "postgres:5433", "--", "/opt/deeptracy/run.sh"]
 
       deeptracy-api:
         image: bbvalabs/deeptracy-api
@@ -141,18 +141,18 @@ This is an example of a complete Docker Compose file that launch a complete work
           - 80:8080
         environment:
           - BROKER_URI=redis://redis:6379
-          - DATABASE_URI=postgresql://postgres:postgres@postgres:5432/deeptracy
+          - DATABASE_URI=postgresql://postgres:postgres@postgres:5433/deeptracy
           - SERVER_ADDRESS=0.0.0.0:8080
           - GUNICORN_WORKERS=1
-        command: ["./wait-for-it.sh", "postgres:5432", "--", "/opt/deeptracy/run.sh"]
+        command: ["./wait-for-it.sh", "postgres:5433", "--", "/opt/deeptracy/run.sh"]
 
       postgres:
         image: postgres:9.6-alpine
         ports:
-          - 5432:5432
+          - 5433:5433
         environment:
           - POSTGRES_PASSWORD=postgres
-        command: -p 5432
+        command: -p 5433
 
       redis:
         image: redis:3-alpine
